@@ -14,7 +14,7 @@ void main() {
     when(mockTodoRepository.getTodos()).thenAnswer(
         (_) async => Right([Todo("aaa"), Todo("bbb"), Todo("ccc")]));
 
-    final result = await getTodos();
+    final result = await getTodos(NoParams());
 
     expect(result, equals(Right([Todo("aaa"), Todo("bbb"), Todo("ccc")])));
   });

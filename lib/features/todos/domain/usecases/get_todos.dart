@@ -8,5 +8,6 @@ class GetTodos implements UseCase<List<Todo>, NoParams> {
 
   GetTodos(this.repository)
 
-  Future<Either<Failure, List<Todo>>> call() => repository.getTodos();
+  @override
+  Future<Either<Failure, List<Todo>>> call(NoParams _) => repository.getTodos();
 }

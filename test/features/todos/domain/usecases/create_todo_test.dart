@@ -13,7 +13,7 @@ void main() {
   test("should get all todos from the repository", () async {
     when(mockTodoRepository.createTodo(any)).thenAnswer(Right);
 
-    final result = await createTodo("test todo");
+    final result = await createTodo(Params("test todo"));
 
     expect(result, equals(Right(Todo("test todo"))));
   });
