@@ -14,9 +14,9 @@ void main() {
 
   test("should get all todos from the repository", () async {
     final todos = [
-      Todo(description: "aaa", completed: false),
-      Todo(description: "bbb", completed: false),
-      Todo(description: "ccc", completed: false)
+      Todo(id: 1, description: "aaa", completed: false),
+      Todo(id: 2, description: "bbb", completed: false),
+      Todo(id: 3, description: "ccc", completed: false)
     ];
 
     when(mockTodoRepository.getTodos()).thenAnswer((_) async => Right(todos));

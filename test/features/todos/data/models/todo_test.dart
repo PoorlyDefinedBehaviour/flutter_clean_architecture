@@ -8,7 +8,7 @@ import '../../../../fixtures/fixture_reader.dart';
 
 void main() {
   test("should be subclass of Todo", () {
-    expect(TodoModel(description: "foo", completed: false), isA<Todo>());
+    expect(TodoModel(id: 1, description: "foo", completed: false), isA<Todo>());
   });
 
   group("fromJson", () {
@@ -16,6 +16,7 @@ void main() {
       final todoJson = json.decode(fixture("test/fixtures/todo.json"));
 
       final expected = TodoModel(
+          id: todoJson["id"],
           description: todoJson['description'],
           completed: todoJson['completed']);
 
@@ -25,9 +26,25 @@ void main() {
 
   group("toJson", () {
     test("should return Map<String, dynamic>", () {
-      final expected = {"description": "foo", "completed": false};
+      final expected = {"id": 1, "description": "foo", "completed": false};
 
-      final result = TodoModel(description: "foo", completed: false).toJson();
+      final result =
+          TodoModel(id: 1, description: "foo", completed: false).toJson();
+
+      expect(result, equals(expected));
+    });
+  });
+
+  group("fromTodo", () {
+    test("should return a TodoModel created from a todo", () {
+      final todo = Todo(id: 1, description: "foo", completed: false);
+
+      final expected = TodoModel(
+          id: todo.id,
+          description: todo.description,
+          completed: todo.completed);
+
+      final result = TodoModel.fromTodo(todo);
 
       expect(result, equals(expected));
     });

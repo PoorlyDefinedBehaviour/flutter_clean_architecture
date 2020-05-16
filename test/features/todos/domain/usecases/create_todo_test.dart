@@ -12,11 +12,12 @@ void main() {
   final createTodo = CreateTodo(mockTodoRepository);
 
   test("should get all todos from the repository", () async {
-    when(mockTodoRepository.create("test todo")).thenAnswer(
-        (_) async => Right(Todo(description: "test todo", completed: false)));
+    when(mockTodoRepository.create("test todo")).thenAnswer((_) async =>
+        Right(Todo(id: 1, description: "test todo", completed: false)));
 
     final result = await createTodo("test todo");
 
-    expect(result, equals(Right(Todo(description:"test todo", completed: false))));
+    expect(result,
+        equals(Right(Todo(id: 1, description: "test todo", completed: false))));
   });
 }

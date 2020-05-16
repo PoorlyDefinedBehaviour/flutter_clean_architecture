@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:clean_architecture_app/core/errors/failures.dart';
 import 'package:clean_architecture_app/core/network/network_info.dart';
 import 'package:clean_architecture_app/features/todos/data/datasources/todo_local_data_source.dart';
@@ -9,6 +11,8 @@ import 'package:dartz/dartz.dart';
 import "package:flutter_test/flutter_test.dart";
 import 'package:mockito/mockito.dart';
 import 'package:flutter/foundation.dart';
+
+import '../../../../fixtures/fixture_reader.dart';
 
 class MockTodoRemoteDataSource extends Mock implements TodoRemoteDataSource {}
 
@@ -24,6 +28,58 @@ void main() {
       remoteDataSource: mockTodoRemoteDataSource,
       localDataSource: mockTodoLocalDataSource,
       networkInfo: mockNetworkInfo);
+
+  group("create", () {
+    group("device is online", () {
+      test("should create todo using the remote data source", () async {
+        clearInteractions(mockTodoLocalDataSource);
+
+        when(mockNetworkInfo.isConnected()).thenAnswer((_) async => true);
+
+        final todoModel =
+            TodoModel.fromJson(json.decode(fixture("test/fixtures/todo.json")));
+
+        final expected = Todo(
+            id: todoModel.id,
+            description: todoModel.description,
+            completed: todoModel.completed);
+
+        when(mockTodoRemoteDataSource.create(expected.description))
+            .thenAnswer((_) async => Right(todoModel));
+
+        await repository.create(expected.description);
+
+        verifyZeroInteractions(mockTodoLocalDataSource);
+
+        verify(mockTodoRemoteDataSource.create(expected.description));
+      });
+    });
+
+    group("device is offline", () {
+      test("should create todo using the local data source", () async {
+        clearInteractions(mockTodoRemoteDataSource);
+
+        when(mockNetworkInfo.isConnected()).thenAnswer((_) async => false);
+
+        final todoModel =
+            TodoModel.fromJson(json.decode(fixture("test/fixtures/todo.json")));
+
+        final expected = Todo(
+            id: todoModel.id,
+            description: todoModel.description,
+            completed: todoModel.completed);
+
+        when(mockTodoLocalDataSource.create(expected.description))
+            .thenAnswer((_) async => Right(todoModel));
+
+        await repository.create(expected.description);
+
+        verifyZeroInteractions(mockTodoRemoteDataSource);
+
+        verify(mockTodoLocalDataSource.create(expected.description));
+      });
+    });
+  });
 
   group("getTodos", () {
     test("should check if device is online", () async {
@@ -44,9 +100,9 @@ void main() {
       test("should return todos from remote data source when device is online",
           () async {
         when(mockTodoRemoteDataSource.getTodos()).thenAnswer((_) async =>
-            Right([TodoModel(description: "foo", completed: false)]));
+            Right([TodoModel(id: 1, description: "foo", completed: false)]));
 
-        final expected = [Todo(description: "foo", completed: false)];
+        final expected = [Todo(id: 1, description: "foo", completed: false)];
 
         final result = await repository
             .getTodos()
@@ -78,9 +134,9 @@ void main() {
         clearInteractions(mockTodoRemoteDataSource);
 
         when(mockTodoLocalDataSource.getTodos()).thenAnswer((_) async =>
-            Right([TodoModel(description: "foo", completed: false)]));
+            Right([TodoModel(id: 1, description: "foo", completed: false)]));
 
-        final expected = [Todo(description: "foo", completed: false)];
+        final expected = [Todo(id: 1, description: "foo", completed: false)];
 
         final result = await repository
             .getTodos()
@@ -107,6 +163,97 @@ void main() {
 
         expect(result, equals(Left(CacheFailure())));
       });
+    });
+  });
+
+  group("update", () {
+    group("device is online", () {
+      test("should update todo when connected to internet", () async {
+        clearInteractions(mockTodoLocalDataSource);
+
+        when(mockNetworkInfo.isConnected()).thenAnswer((_) async => true);
+
+        final todoModel =
+            TodoModel.fromJson(json.decode(fixture("test/fixtures/todo.json")));
+
+        final todo = Todo(
+            id: todoModel.id,
+            description: todoModel.description,
+            completed: todoModel.completed);
+
+        when(mockTodoRemoteDataSource.update(todoModel))
+            .thenAnswer((_) async => Right(todoModel));
+
+        await repository.update(todo);
+
+        verify(mockTodoRemoteDataSource.update(todoModel));
+
+        verifyZeroInteractions(mockTodoLocalDataSource);
+      });
+    });
+  });
+
+  group("device is offline", () {
+    test("should update todo locally when not  connected to internet",
+        () async {
+      clearInteractions(mockTodoRemoteDataSource);
+
+      when(mockNetworkInfo.isConnected()).thenAnswer((_) async => false);
+
+      final todoModel =
+          TodoModel.fromJson(json.decode(fixture("test/fixtures/todo.json")));
+
+      final todo = Todo(
+          id: todoModel.id,
+          description: todoModel.description,
+          completed: todoModel.completed);
+
+      when(mockTodoLocalDataSource.update(todoModel))
+          .thenAnswer((_) async => Right(todoModel));
+
+      await repository.update(todo);
+
+      verify(mockTodoLocalDataSource.update(todoModel));
+
+      verifyZeroInteractions(mockTodoRemoteDataSource);
+    });
+  });
+
+  group("delete", () {
+    group("device is online", () {
+      test("should delete todo when connected to internet", () async {
+        when(mockNetworkInfo.isConnected()).thenAnswer((_) async => true);
+
+        final todo =
+            TodoModel.fromJson(json.decode(fixture("test/fixtures/todo.json")));
+
+        when(mockTodoRemoteDataSource.delete(todo))
+            .thenAnswer((_) async => Right(null));
+
+        final result = await repository.delete(todo);
+
+        verify(mockTodoRemoteDataSource.delete(todo));
+
+        expect(result, equals(Right(null)));
+      });
+    });
+  });
+
+  group("device is offline", () {
+    test("should delete todo locally when not connected to internet", () async {
+      when(mockNetworkInfo.isConnected()).thenAnswer((_) async => false);
+
+      final todo =
+          TodoModel.fromJson(json.decode(fixture("test/fixtures/todo.json")));
+
+      when(mockTodoLocalDataSource.delete(todo))
+          .thenAnswer((_) async => Right(null));
+
+      final result = await repository.delete(todo);
+
+      verify(mockTodoLocalDataSource.delete(todo));
+
+      expect(result, equals(Right(null)));
     });
   });
 }

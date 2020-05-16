@@ -9,7 +9,7 @@ import 'package:dartz/dartz.dart';
 import "package:meta/meta.dart";
 
 Todo _fromTodoModel(final TodoModel todo) =>
-    Todo(description: todo.description, completed: todo.completed);
+    Todo(id: todo.id, description: todo.description, completed: todo.completed);
 
 class TodoRepositoryImpl implements TodoRepository {
   final TodoRemoteDataSource remoteDataSource;
@@ -22,9 +22,14 @@ class TodoRepositoryImpl implements TodoRepository {
       @required this.networkInfo});
 
   @override
-  Future<Either<Failure, Todo>> create(final String description) {
-    // TODO: implement create
-    throw UnimplementedError();
+  Future<Either<Failure, Todo>> create(final String description) async {
+    final isConnected = await networkInfo.isConnected();
+
+    if (!isConnected) {
+      return localDataSource.create(description);
+    }
+
+    return remoteDataSource.create(description);
   }
 
   @override
@@ -42,5 +47,27 @@ class TodoRepositoryImpl implements TodoRepository {
       localDataSource.cacheTodos(ts);
       return ts.map(_fromTodoModel).toList();
     });
+  }
+
+  @override
+  Future<Either<Failure, Todo>> update(Todo todo) async {
+    final isConnected = await networkInfo.isConnected();
+
+    if (!isConnected) {
+      return localDataSource.update(TodoModel.fromTodo(todo));
+    }
+
+    return remoteDataSource.update(TodoModel.fromTodo(todo));
+  }
+
+  @override
+  Future<Either<Failure, void>> delete(Todo todo) async {
+    final isConnected = await networkInfo.isConnected();
+
+    if (!isConnected) {
+      return localDataSource.delete(TodoModel.fromTodo(todo));
+    }
+
+    return remoteDataSource.delete(TodoModel.fromTodo(todo));
   }
 }
