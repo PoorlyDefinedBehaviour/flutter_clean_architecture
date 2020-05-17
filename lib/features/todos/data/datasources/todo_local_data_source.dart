@@ -22,25 +22,34 @@ class TodoLocalDataSourceImpl implements TodoLocalDataSource {
 
   @override
   Future<void> cacheTodos(List<TodoModel> todos) async {
-    sharedPreferences.setString(TODOS_CACHE_KEY, json.encode(todos));
+    sharedPreferences.setString(
+      TODOS_CACHE_KEY,
+      json.encode(todos),
+    );
   }
 
   @override
   Future<Either<Failure, TodoModel>> create(String description) {
-    return getTodos().then((failureOrTodos) =>
-        failureOrTodos.fold((failure) => Left(failure), (todos) {
+    return getTodos().then(
+      (failureOrTodos) => failureOrTodos.map(
+        (todos) {
           final highestId = todos.fold(
               0,
               (previousValue, element) =>
                   previousValue > element.id ? previousValue : element.id);
 
           final todo = TodoModel(
-              id: highestId + 1, description: description, completed: false);
+            id: highestId + 1,
+            description: description,
+            completed: false,
+          );
 
           cacheTodos([...todos, todo]);
 
-          return Right(todo);
-        }));
+          return todo;
+        },
+      ),
+    );
   }
 
   @override

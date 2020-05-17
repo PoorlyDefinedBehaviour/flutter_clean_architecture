@@ -24,8 +24,8 @@ dependencies:
   flutter:
     sdk: flutter
   get_it: ^2.0.1
-  flutter_bloc: ^0.2.1
-  equatable: ^0.4.0
+  flutter_bloc: 4.0.0
+  equatable: ^1.1.1
   dartz: ^0.8.6
   data_connection_checker: ^0.3.4
   http: 0.12.1

@@ -8,5 +8,5 @@ class Todo extends Equatable {
 
   Todo(
       {@required this.id, @required this.description, @required this.completed})
-      : super([description, completed]);
+      : super([id, description, completed]);
 }
